@@ -18,6 +18,32 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter, which checks for copyrights
+  # uncomment the line when copyright and license are not present in all source files
+  #set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # uncomment the line when this package is not in a git repo
+  #set(ament_cmake_cpplint_FOUND TRUE)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  set(TESTFILES
+      test/main.cpp
+      test/savings_account_test.cpp
+      )
+  # Add gtest executables
+  ament_add_gtest(${PROJECT_NAME}_test ${TESTFILES})
+  target_link_libraries(${PROJECT_NAME}_test my_lib)
+
+  install(TARGETS
+        ${PROJECT_NAME}_test
+        # Install the generated test executable file to the path after DESTINATION
+        DESTINATION lib/${PROJECT_NAME})
+  # uncomment to enforce lintners and static code analyzers defined in ament_lint_common package        
+  # ament_lint_auto_find_test_dependencies()
+endif()
+
 # tell CMake to add this directory to the target including path
 include_directories(include/my_cpp_library)
 # you can use the file you are using but this is mostly used for multiple header files
