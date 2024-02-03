@@ -10,6 +10,26 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  set(TESTFILES
+      test/main.cpp
+      test/distance_control_node_test.cpp
+      )
+  # Add a gtest executables
+  ament_add_gtest(${PROJECT_NAME}_test ${TESTFILES})
+  target_link_libraries(${PROJECT_NAME}_test distance_control_lib)
+
+  install(TARGETS
+        ${PROJECT_NAME}_test
+        # Install the generated test executable file to the path after DESTINATION
+        DESTINATION lib/${PROJECT_NAME})
+  # uncomment to enforce lintners and static code analyzers defined in ament_lint_common package        
+  # ament_lint_auto_find_test_dependencies()
+endif()
+
 ## ADD LIBRARY
 include_directories(include)
 add_library(distance_control_lib src/distance_control.cpp include/distance_control/distance_control_header.h)
