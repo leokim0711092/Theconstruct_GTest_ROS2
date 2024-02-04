@@ -3,6 +3,8 @@
 #include "gtest/gtest.h"
 #include <memory>
 
+#include "distance_control/distance_control_header.h"
+
 using std::placeholders::_1;
 using namespace std::chrono_literals;
 
@@ -18,20 +20,24 @@ public:
   PubSubscriberTestFixture() {
     callback_success_ = false;
 
-    node = rclcpp::Node::make_shared("test_publisher");
+    distCtrlNode = std::make_shared<DistanceControl>(
+        "distance_to_vehicle_ahead", "throttle", "distance_control");
 
-    data_publisher_ =
-        node->create_publisher<std_msgs::msg::Float32>("data_topic", 10);
+    pubSubNode = rclcpp::Node::make_shared("test_publisher");
 
-    data_subscriber_ = node->create_subscription<std_msgs::msg::Float32>(
-        "data_topic", 10,
+    data_publisher_ = pubSubNode->create_publisher<std_msgs::msg::Float32>(
+        "distance_to_vehicle_ahead", 10);
+
+    data_subscriber_ = pubSubNode->create_subscription<std_msgs::msg::Float32>(
+        "throttle", 10,
         std::bind(&PubSubscriberTestFixture::received_data_callback, this, _1));
   }
 
   double publisherSubscriberTest(float test_data);
 
 protected:
-  std::shared_ptr<rclcpp::Node> node;
+  std::shared_ptr<rclcpp::Node> pubSubNode;
+  std::shared_ptr<rclcpp::Node> distCtrlNode;
 
 private:
   void received_data_callback(const std_msgs::msg::Float32::SharedPtr msg) {
@@ -52,11 +58,12 @@ double PubSubscriberTestFixture::publisherSubscriberTest(float test_data) {
   while (!callback_success_) {
     data_publisher_->publish(data_send);
     std::this_thread::sleep_for(1s);
-    rclcpp::spin_some(node);
+    rclcpp::spin_some(pubSubNode);
+    rclcpp::spin_some(distCtrlNode);
   }
   return received_data_;
 }
 
 TEST_F(PubSubscriberTestFixture, SimpleTest30) {
-  EXPECT_DOUBLE_EQ(30.0, publisherSubscriberTest(30.0));
+  EXPECT_FLOAT_EQ(0.2, publisherSubscriberTest(30.0));
 }
